@@ -5,6 +5,9 @@
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+OWNER class stores the name and pet name allows funtion to add pet,
+ PET class name, species and tasks, 
+ Tasks class priorty,pet and duration
 - What classes did you include, and what responsibilities did you assign to each?
 
 **b. Design changes**
