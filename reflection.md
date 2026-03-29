@@ -14,6 +14,7 @@ OWNER class stores the name and pet name allows funtion to add pet,
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
+    Yes it did, Pet references Owner, Task references Pet, and Owner references Pet via list. This is fine with forward annotations, but instantiation order matters (create Owner first, then Pet with owner, then add pet to owner). Add validation for dataclasses (e.g., check priority values).
 
 ---
 
