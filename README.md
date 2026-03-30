@@ -53,3 +53,50 @@ pip install -r requirements.txt
 5. Add tests to verify key behaviors.
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
+
+## Testing PawPal+
+
+### Running Tests
+
+To execute the test suite, run:
+
+```bash
+python -m pytest tests/test_pawpal.py -v
+```
+
+### Test Coverage
+
+The test suite comprehensively validates the following critical areas:
+
+**Sorting Correctness (7 tests)**
+- Verifies tasks are returned in chronological order by time (HH:MM format)
+- Handles edge cases including empty time fields, midnight boundaries, and tasks with identical times
+- Ensures consistent, predictable ordering for daily planning
+
+**Recurrence Logic (7 tests)**
+- Confirms marking a daily task complete creates a new task for the following day
+- Validates weekly recurrence logic with 7-day intervals
+- Tests boundary conditions (month/year transitions) and attribute inheritance for recurring tasks
+- Ensures one-time tasks don't create unwanted recurrences
+
+**Conflict Detection (9 tests)**
+- Detects tasks scheduled at the same time and produces warning messages
+- Handles multiple conflict scenarios with multiple task pairs
+- Ignores empty/unscheduled time fields appropriately
+- Verifies conflict messages include descriptive task information
+
+**Additional Coverage**
+- Task completion status management (pending/completed toggling)
+- Task addition and removal from pets
+- Owner-pet integration and multi-pet task aggregation
+- Task filtering by completion status and pet name
+
+### Confidence Level
+
+**★★★☆☆ (3.4 / 5.0)**
+
+The system demonstrates solid core functionality with well-tested sorting, recurrence, and conflict detection. However, reliability confidence is moderate due to:
+
+- **Strengths**: Critical scheduling features are thoroughly validated; edge cases like month boundaries and time conflicts are covered
+- **Limitations**: Real-world scenario testing (e.g., large task volumes, rapid state changes) is limited; UI integration not directly tested; time conflict resolution strategy not implemented (conflicts detected but not resolved)
+- **Future work**: Add integration tests with full workflow scenarios, implement conflict resolution strategies, validate performance with large datasets, and test Streamlit UI interaction

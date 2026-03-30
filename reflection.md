@@ -45,6 +45,7 @@ to keep implementation simple and safe for MVP.
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
+ it made a logic error. The assertion is incorrect. The tasks should be sorted in chronological order (07:00, 15:00, 19:00), but I asserted them in the wrong order
 - How did you evaluate or verify what the AI suggested?
 
 ---
@@ -60,7 +61,7 @@ to keep implementation simple and safe for MVP.
 
 - How confident are you that your scheduler works correctly?
 - What edge cases would you test next if you had more time?
-
+the boundaries and  validate performance with large datasets
 ---
 
 ## 5. Reflection
