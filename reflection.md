@@ -23,11 +23,14 @@ OWNER class stores the name and pet name allows funtion to add pet,
 **a. Constraints and priorities**
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
+available_time, Task duration, scheduled time for chronological sort and conflict detection (same time slot across tasks)
 - How did you decide which constraints mattered most?
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+A lightweight conflict-warning approach is chosen over full CSP/inference 
+to keep implementation simple and safe for MVP.
 - Why is that tradeoff reasonable for this scenario?
 
 ---

@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Tuple
+from datetime import date, timedelta
 
 
 @dataclass
@@ -9,6 +10,8 @@ class Task:
     duration_minutes: int
     frequency: str = "once"  # e.g. "daily", "weekly", "once"
     completed: bool = False
+    time: str = ""  # e.g. "09:00" for 9 AM
+    due_date: date = field(default_factory=date.today)
 
     def mark_completed(self) -> None:
         """Mark this task as completed."""
@@ -25,7 +28,7 @@ class Task:
     def __str__(self):
         """Return a formatted string representation of the task."""
         status = "Done" if self.completed else "Pending"
-        return f"{self.description} ({self.duration_minutes}m, {self.frequency}, {status})"
+        return f"{self.description} ({self.duration_minutes}m, {self.frequency}, {status}, due: {self.due_date})"
 
 
 @dataclass
@@ -112,8 +115,70 @@ class Schedule:
 
 
 class Scheduler:
+    def sort_by_time(self, tasks: List[Task]) -> List[Task]:
+        """Sort tasks by their time attribute in HH:MM format."""
+        return sorted(tasks, key=lambda t: int(t.time.split(':')[0]) * 60 + int(t.time.split(':')[1]) if t.time else 0)
+
+    def filter_tasks(self, owner: Owner, completion_status: bool | None = None, pet_name: str | None = None) -> List[Task]:
+        """Filter tasks by completion status and/or pet name.
+        
+        Args:
+            owner: The owner whose tasks to filter.
+            completion_status: True for completed, False for pending, None for all.
+            pet_name: Name of the pet to filter by, None for all pets.
+        
+        Returns:
+            List of filtered tasks.
+        """
+        tasks = []
+        for pet in owner.get_pets():
+            if pet_name is None or pet.name == pet_name:
+                pet_tasks = pet.get_tasks()
+                if completion_status is not None:
+                    pet_tasks = [t for t in pet_tasks if t.completed == completion_status]
+                tasks.extend(pet_tasks)
+        return tasks
+
+    def mark_task_complete(self, pet: Pet, task: Task) -> None:
+        """Mark a task as completed and create next occurrence if recurring."""
+        task.mark_completed()
+        if task.frequency == "daily":
+            new_due_date = task.due_date + timedelta(days=1)
+            new_task = Task(
+                description=task.description,
+                duration_minutes=task.duration_minutes,
+                frequency=task.frequency,
+                time=task.time,
+                due_date=new_due_date
+            )
+            pet.add_task(new_task)
+        elif task.frequency == "weekly":
+            new_due_date = task.due_date + timedelta(days=7)
+            new_task = Task(
+                description=task.description,
+                duration_minutes=task.duration_minutes,
+                frequency=task.frequency,
+                time=task.time,
+                due_date=new_due_date
+            )
+            pet.add_task(new_task)
+
+    def detect_time_conflicts(self, tasks: List[Task]) -> str:
+        """Detect tasks that are scheduled at the same time and return a warning message.
+        
+        Returns an empty string if no conflicts, otherwise a warning message.
+        """
+        conflicts = []
+        for i in range(len(tasks)):
+            for j in range(i + 1, len(tasks)):
+                if tasks[i].time == tasks[j].time and tasks[i].time:
+                    conflicts.append((tasks[i], tasks[j]))
+        if conflicts:
+            conflict_descriptions = [f"{t1.description} and {t2.description} at {t1.time}" for t1, t2 in conflicts]
+            return f"Warning: Time conflicts detected: {', '.join(conflict_descriptions)}"
+        return ""
+
     def generate_schedule(self, pet: Pet, available_time: int) -> Schedule:
-        """Create a schedule for a single pet's pending tasks within available time."""
         schedule = Schedule()
         for task in sorted(pet.get_pending_tasks(), key=lambda t: t.duration_minutes):
             if schedule.total_time + task.duration_minutes <= available_time:
@@ -121,19 +186,23 @@ class Scheduler:
         return schedule
 
     def generate_owner_schedule(self, owner: Owner, available_time: int) -> Schedule:
-        """Create a schedule for all of an owner's pets' pending tasks within available time."""
         schedule = Schedule()
         all_tasks = owner.get_all_pending_tasks()
 
-        # Example prioritization: shorter tasks first, for higher throughput
-        for task in sorted(all_tasks, key=lambda t: t.duration_minutes):
+        # Sort by time first, then by duration for tie-breaking
+        sorted_tasks = sorted(all_tasks, key=lambda t: (int(t.time.split(':')[0]) * 60 + int(t.time.split(':')[1]) if t.time else 0, t.duration_minutes))
+
+        for task in sorted_tasks:
             if schedule.total_time + task.duration_minutes <= available_time:
-                schedule.add_task(task)
+                # Check for time conflicts with already scheduled tasks
+                temp_tasks = schedule.tasks + [task]
+                warning = self.detect_time_conflicts(temp_tasks)
+                if not warning:  # No conflicts
+                    schedule.add_task(task)
 
         return schedule
 
     def schedule_walk(self, pet: Pet, walk_task: Task, time_slot: str) -> bool:
-        """Add a walk task to a pet's schedule for a specific time slot."""
         if walk_task not in pet.tasks:
             pet.add_task(walk_task)
 
@@ -142,14 +211,12 @@ class Scheduler:
         return True
 
     def get_tasks_by_pet(self, owner: Owner) -> dict[str, list[Task]]:
-        """Return a dictionary mapping each pet's name to its task list."""
         tasks_by_pet = {}
         for pet in owner.get_pets():
             tasks_by_pet[pet.name] = pet.get_tasks()
         return tasks_by_pet
 
     def summarize_owner_tasks(self, owner: Owner) -> str:
-        """Return a summary string of pending and completed tasks for an owner."""
         pending = owner.get_all_pending_tasks()
         completed = owner.get_all_completed_tasks()
         return (

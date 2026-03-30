@@ -22,6 +22,18 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## Smarter Scheduling Features
+
+The scheduler now includes several intelligent algorithmic improvements:
+
+- Time-based sorting: Tasks are sorted chronologically by scheduled time (HH:MM format) to present a clear, ordered daily plan.
+- Task filtering: Filter tasks by completion status (pending/completed) and/or pet name for flexible reporting and management.
+- Recurring task automation: When a daily or weekly task is marked complete, the scheduler automatically generates the next occurrence with an updated due date using Python's `timedelta`.
+- Conflict detection: The scheduler detects and warns about tasks scheduled at the same time, preventing overlapping commitments without crashing.
+- Constraint-aware scheduling: Tasks are prioritized by available time budget and time conflicts are avoided during schedule generation.
+
+These features ensure pet care plans are realistic, consistent, and conflict-free.
+
 ## Getting started
 
 ### Setup
