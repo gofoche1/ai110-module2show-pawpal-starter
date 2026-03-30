@@ -76,18 +76,54 @@ else:
 st.divider()
 
 st.subheader("Build Schedule")
-st.caption("This button should call your scheduling logic once you implement it.")
+st.caption("Generate a daily schedule based on your pet's tasks.")
+
+# Update owner name if changed
+owner.name = owner_name
+
+# Get or create pet
+pets_dict = {p.name: p for p in owner.get_pets()}
+if pet_name not in pets_dict:
+    new_pet = Pet(name=pet_name, species=species)
+    owner.add_pet(new_pet)
+    st.session_state.owner = owner
+else:
+    new_pet = pets_dict[pet_name]
+
+# Add tasks from UI to pet
+for task_dict in st.session_state.tasks:
+    task = Task(
+        description=task_dict["title"],
+        duration_minutes=task_dict["duration_minutes"],
+        frequency="once"
+    )
+    # Only add if not already in pet's task list
+    if task not in new_pet.tasks:
+        new_pet.add_task(task)
+
+available_time = st.slider("Available time (minutes)", 30, 480, 120)
 
 if st.button("Generate schedule"):
-    st.warning(
-        "Not implemented yet. Next step: create your scheduling logic (classes/functions) and call it here."
-    )
-    st.markdown(
-        """
-Suggested approach:
-1. Design your UML (draft).
-2. Create class stubs (no logic).
-3. Implement scheduling behavior.
-4. Connect your scheduler here and display results.
-"""
-    )
+    if not st.session_state.tasks:
+        st.warning("Please add at least one task first.")
+    else:
+        scheduler = Scheduler()
+        schedule = scheduler.generate_owner_schedule(owner=owner, available_time=available_time)
+        
+        st.success("✅ Schedule Generated!")
+        
+        if schedule.tasks:
+            st.markdown("### 📅 Today's Plan")
+            
+            for idx, task in enumerate(schedule.tasks, start=1):
+                st.write(f"**{idx}. {task.description}**")
+                st.write(f"   ⏱️ Duration: {task.duration_minutes} min | 🔄 {task.frequency}")
+            
+            st.divider()
+            st.metric("Total Time Scheduled", f"{schedule.total_time} minutes", f"Available: {available_time} min")
+            
+            # Show summary
+            st.markdown("### 📊 Summary")
+            st.write(scheduler.summarize_owner_tasks(owner))
+        else:
+            st.info("No tasks fit within the available time. Try increasing available time or reducing task durations.")

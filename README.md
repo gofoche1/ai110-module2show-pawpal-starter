@@ -100,3 +100,45 @@ The system demonstrates solid core functionality with well-tested sorting, recur
 - **Strengths**: Critical scheduling features are thoroughly validated; edge cases like month boundaries and time conflicts are covered
 - **Limitations**: Real-world scenario testing (e.g., large task volumes, rapid state changes) is limited; UI integration not directly tested; time conflict resolution strategy not implemented (conflicts detected but not resolved)
 - **Future work**: Add integration tests with full workflow scenarios, implement conflict resolution strategies, validate performance with large datasets, and test Streamlit UI interaction
+
+
+## Smarter Scheduling Algorithms
+
+Your PawPal+ system implements the following core scheduling and management algorithms:
+
+### **1. Time-Based Chronological Sorting**
+- **Method:** `Scheduler.sort_by_time(tasks)` + time-aware sorting in `generate_owner_schedule()`
+- **Details:** Tasks sorted by scheduled time (HH:MM format) in 24-hour format; handles empty time fields gracefully; used to create clear, ordered daily plans
+- **Use case:** Owner sees tasks in order they'll happen throughout the day
+
+### **2. Intelligent Task Filtering**
+- **Method:** `Scheduler.filter_tasks(owner, completion_status, pet_name)`
+- **Details:** Filter by completion status (pending/completed/all) and/or specific pet; enables quick views of what needs attention
+- **Use case:** "Show me all pending tasks for Buddy" or "What has Mochi completed today?"
+
+### **3. Recurring Task Automation**
+- **Method:** `Scheduler.mark_task_complete(pet, task)`
+- **Details:** When a recurring task (daily/weekly) is marked complete, automatically generates next occurrence with updated due date using `timedelta`; one-time tasks don't recur
+- **Use case:** Mark "Morning walk" complete → system creates tomorrow's walk automatically
+
+### **4. Time Conflict Detection**
+- **Method:** `Scheduler.detect_time_conflicts(tasks)`
+- **Details:** Identifies tasks scheduled at identical times; produces descriptive warning messages; prevents overlapping commitments
+- **Use case:** Warns "Morning walk and playtime at 09:00 conflict"
+
+### **5. Time-Aware Schedule Generation**
+- **Method:** `Scheduler.generate_owner_schedule(owner, available_time)`
+- **Details:** Builds daily schedule respecting time budget; sorts by chronological time, then duration; avoids scheduling conflicting tasks
+- **Use case:** "Create today's plan with 2 hours available" → avoids conflicts and stays within time limit
+
+### **6. Multi-Pet Task Aggregation & Querying**
+- **Method:** `Owner.get_all_tasks()`, `Owner.get_all_pending_tasks()`, `Owner.get_all_completed_tasks()`, `Scheduler.get_tasks_by_pet()`
+- **Details:** Unified view of tasks across all pets; quickly answer "What needs to happen today?" and "Which pet needs what?"
+- **Use case:** Comprehensive owner dashboard showing all pet care needs
+
+### **7. Task State Management (Recurrence & Completion)**
+- **Method:** `Task.mark_completed()`, `Task.mark_pending()`, `Task.is_completed()`
+- **Details:** Track task completion with automatic recurrence generation; supports daily, weekly, and one-time frequencies
+- **Use case:** Toggle task status while system maintains recurring schedule automatically
+
+<a href="/images/demo.png" target="_blank"><img src='/images/demo.png' title='PawPal App' width='' alt='PawPal App' class='center-block' /></a>.
